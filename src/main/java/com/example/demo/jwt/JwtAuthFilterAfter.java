@@ -53,9 +53,6 @@ public class JwtAuthFilterAfter extends OncePerRequestFilter {
                 // lay thong tin user
                 String email = jwtTokenProvider.getUserNameFormJwt(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                if(userDetails == null ||!((CustomUserDetails) userDetails).isEnabled()){
-                    throw new RuntimeException("Tài khoản chưa được kích hoạt");
-                }
                 if (userDetails != null) {
                     // cap quyen xac thuc
                     UsernamePasswordAuthenticationToken authenticationToken =

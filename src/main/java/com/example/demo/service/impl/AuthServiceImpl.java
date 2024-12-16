@@ -138,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
         // gui email otp
         String emailBody =buildEmail(savedUser.getUserName(),otpCode);
         sendMailService.sendMail(signupRequest.getEmail(),emailBody,"Xác nhận đăng ký tài khoản - Mã OTP");
-        return ResponseEntity.ok("Người dùng đã được đăng ký. Vui lòng kiểm tra email để nhận mã OTP");
+        return ResponseEntity.ok(Map.of("message","Người dùng đã được đăng ký. Vui lòng kiểm tra email để nhận mã OTP"));
     }
 
     @Override
@@ -150,13 +150,28 @@ public class AuthServiceImpl implements AuthService {
         if(user.getOtpCode() == null || !user.getOtpCode().trim().equals(userOtpDto.getOtpCode())){
             return ResponseEntity.badRequest().body("Mã otp không hợp lệ");
         }
-        if(Duration.between(user.getOtpGeneratedTime(),LocalDateTime.now()).toMinutes() > 15){
+        if(Duration.between(user.getOtpGeneratedTime(),LocalDateTime.now()).getSeconds() > 60){
             return ResponseEntity.badRequest().body("Mã otp đã hết hạn");
         }
         user.setIsEnabled(true);
         userRepository.save(user);
-        return ResponseEntity.ok("Kích hoạt tài khoản thành công");
+        return ResponseEntity.ok(Map.of("message","Kích hoạt tài khoản thành công"));
 
+    }
+
+    @Override
+    public ResponseEntity<?> sendBackOtp(UserOtpDto userOtpDto) {
+        User user = userRepository.findByEmail(userOtpDto.getEmail()).orElseThrow(()-> new RuntimeException("Không tìm thấy email người dùng này "));
+        if(user.getIsEnabled()){
+            return ResponseEntity.ok(Map.of("message","Tài khoản của người dùng chưa được kích hoạt"));
+        }
+        String newOtp = OtpUtil.generateOtp(6);
+        user.setOtpCode(newOtp);
+        user.setOtpGeneratedTime(LocalDateTime.now());
+        userRepository.save(user);
+        String emailBody = buildEmail(user.getUserName(), newOtp);
+        sendMailService.sendMail(userOtpDto.getEmail(), emailBody, "OTP mới của bạn");
+        return ResponseEntity.ok(Map.of("message", "Mã OTP mới đã được gửi đến email của bạn."));
     }
 
     private String buildEmail(String name, String otpCode) {
@@ -175,7 +190,7 @@ public class AuthServiceImpl implements AuthService {
                         <p>Chào <strong>%s</strong>,</p>
                         <p>Cảm ơn bạn đã đăng ký tài khoản. Đây là mã OTP của bạn:</p>
                         <p style="font-size:24px;font-weight:bold;text-align:center;color:#1D70B8;">%s</p>
-                        <p>Mã OTP này sẽ hết hạn sau 15 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+                        <p>Mã OTP này sẽ hết hạn sau 1 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
                         <p>Hẹn gặp lại!</p>
                     </td>
                 </tr>

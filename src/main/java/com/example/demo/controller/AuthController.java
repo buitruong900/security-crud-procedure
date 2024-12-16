@@ -69,7 +69,7 @@ public class AuthController {
     @PostMapping("/permissions")
     public ResponseEntity<?> findUrlByRole(@RequestBody List<String> roles) {
         try {
-                List<String> permissions = urlApiRepository.findNameUrlByRoles(roles);
+            List<String> permissions = urlApiRepository.findNameUrlByRoles(roles);
             return ResponseEntity.ok(permissions);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy quyền.");
@@ -87,6 +87,10 @@ public class AuthController {
     @PostMapping("/check-otp")
     public ResponseEntity<?> checkOtp(@RequestBody UserOtpDto userOtpDto){
         return authService.checkOtp(userOtpDto);
+    }
+    @PostMapping("/sendBack-otp")
+    public ResponseEntity<?> sendBackOtp(@RequestBody UserOtpDto userOtpDto){
+        return authService.sendBackOtp(userOtpDto);
     }
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest){

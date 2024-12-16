@@ -44,9 +44,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if(StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)){
             String email = jwtTokenProvider.getUserNameFormJwt(jwt);
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            if(userDetails == null ||!((CustomUserDetails) userDetails).isEnabled()){
-                throw new RuntimeException("Tài khoản chưa được kích hoạt");
-            }
             if(userDetails!= null){
                 UsernamePasswordAuthenticationToken authenticationToken
                         = new UsernamePasswordAuthenticationToken(userDetails,null, userDetails.getAuthorities());

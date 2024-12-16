@@ -12,4 +12,5 @@ public interface AuthService {
     Boolean userEmail(String email);
     ResponseEntity<?> registerStaff(SignupRequest signupRequest);
     ResponseEntity<?> checkOtp(UserOtpDto userOtpDto);
+    ResponseEntity<?> sendBackOtp(UserOtpDto userOtpDto);
 }
