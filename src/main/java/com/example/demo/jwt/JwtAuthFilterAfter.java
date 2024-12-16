@@ -46,31 +46,21 @@ public class JwtAuthFilterAfter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            // lay jwt tu request
             String jwt = getJwtFromRequest(request);
-            // xac thuc jwt
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                // lay thong tin user
                 String email = jwtTokenProvider.getUserNameFormJwt(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 if (userDetails != null) {
-                    // cap quyen xac thuc
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-                    // phan quyen va kiem tra quyen dua tren role
                     Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
                     List<String> roleName = authorities.stream()
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.toList());
                     List<String> allowedUrls = roleRepository.findRoleFunctionAndPermission(roleName);
                     allowedUrls.add("/api/auth");
-                    log.info("role la : " + roleName);
-                    log.info("jwt la  : " + jwt);
-                    log.info("cac url duoc truy cap theo role : " + allowedUrls);
-
                     String requestUrl = request.getRequestURI();
                     if (!isUrlAllowed(requestUrl, allowedUrls)) {
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
